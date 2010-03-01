@@ -1,0 +1,35 @@
+$def with (error, msg, url='')
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+
+</html>
+<head>
+    $if error == '403':
+        <title>403 Forbidden</title>
+    $elif error == 'login':
+        <title>Not Logged In</title>
+<style type="text/css">
+    #error {
+        text-align: center;
+        font-family: Arial;
+        font-size: 2em;
+    }
+    #error a {
+        font-size: 1em;
+        color: blue;
+        text-decoration: none;
+    }
+    #error a:hover {
+        text-decoration: underline;
+    }
+</style>
+</head>
+<body>
+    <div id="error">
+        <p>$msg</p>
+        $if url:
+            <a href="$url[0]">$url[1]</a>
+    </div>
+</body>
+</html>

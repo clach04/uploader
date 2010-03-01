@@ -1,0 +1,21 @@
+$def with (msg)
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Upload File</title>
+    <link rel="stylesheet" type="text/css" href="/static/style.css" />
+</head>
+<body>
+    $:render.head()
+    <div id="content">
+        <h1>Upload File</h1>
+        $if msg:
+            <span class="msg" style="color: red; font-weight: bold; font-size: 1.2em;">$msg</span>
+        <p style="text-align: left;">Select File to Upload:</p>
+        <form method="post" enctype="multipart/form-data" action="">
+            <p style="text-align: center;"><input type="file" name="upfile" size="30"/></p>
+            <p><input class="sb" type="submit" value="Upload"/></p>
+        </form>
+    </div>
+</body>
+</html>

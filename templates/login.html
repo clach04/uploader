@@ -1,0 +1,17 @@
+$def with (form)
+
+<html>
+<head>
+    <title>Login</title>
+    <link rel="stylesheet" type="text/css" href="/static/style.css" />
+</head>
+<body>
+    <div id="content">
+        <h1>Login</h1>
+        <form name="login" method="post">
+            $:form.render()
+            <input class="sb" type="submit" value="Submit"/>
+        </form>
+    </div>
+</body>
+</html>

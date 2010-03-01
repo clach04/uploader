@@ -1,0 +1,113 @@
+$def with (admin, users, nocredits, expired, msg)
+
+
+$code:
+    def UserInfo(x):
+        username=x.name
+        credits=x.credits
+        expr=x.exprdate.split(' ')[0]
+        id=x.id
+        usertype=x.usertype
+        
+        return [id, username, credits, expr, usertype]
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Users</title>
+    <link rel="stylesheet" type="text/css" href="/static/style.css" />
+    <style type="text/css">
+    #content {
+        padding: 10px 20px 0;
+    }
+    h2 {
+        font-size: 1.3em;
+        color: #2B547E;
+    }
+    #admin {
+        padding: 5px;
+        border-top: 1px solid #000;
+        border-bottom: 0;
+    }
+    table {
+        border: 1px solid #000;
+        border-collapse: collapse;
+    }
+    table th {
+        border: 1px solid #000;
+        padding: 5px;
+    }
+    table td {
+        border: 1px solid #000;
+        padding: 5px;
+    }
+    </style>
+</head>
+<body>
+$:render.head()
+    <div id="content">
+        <h1>Users</h1>
+        <strong class="Wrong" style="color: red;">$msg</strong>
+        <form method="post" action="">
+            <h2>Active Users</h2>
+            <table>
+                <tr>
+                    <th>Username</th>
+                    <th>Credits</th>
+                    <th>Expiration</th>
+                    <th>Check</th>
+                </tr>
+                $for x in admin:
+                    <tr>
+                        $ u = UserInfo(x)
+                        <td style="font-weight: bold; color: red;">$u[1]</td>
+                        <td>-</td>
+                        <td>-</td>
+                        <td><input id="chk_$u[0]" value="$u[0]" name="chk" type="checkbox"/></td>
+                    </tr>
+                $for x in users:
+                    <tr>
+                        $ u = UserInfo(x)
+                        <td>$u[1]</td>
+                        <td>$u[2]</td>
+                        <td>$u[3]</td>
+                        <td><input id="chk_$u[0]" value="$u[0]" name="chk" type="checkbox"/></td>
+                    </tr>
+            </table>
+            <br/>
+            <h2>Invalid Users</h2>
+            <table>
+                <tr>
+                    <th>Username</th>
+                    <th>Credits</th>
+                    <th>Expiration</th>
+                    <th>Check</th>
+                </tr>
+                $for x in nocredits:
+                    <tr>
+                        $ u = UserInfo(x)
+                        <td>$u[1]</td>
+                        <td><i><b>$u[2]</b></i></td>
+                        <td>$u[3]</td>
+                        <td><input id="chk_$u[0]" value="$u[0]" name="chk" type="checkbox"/></td>
+                    </tr>
+                $for x in expired:
+                    <tr>
+                        $ u = UserInfo(x)
+                        <td>$u[1]</td>
+                        <td>$u[2]</td>
+                        <td><i><b>$u[3]</b></i></td>
+                        <td><input id="chk_$u[0]" value="$u[0]" name="chk" type="checkbox"/></td>
+                    </tr>
+            </table>
+            <p>
+                <input type="submit" name='form_action' value="Add" />
+                <input type="submit" name='form_action' value="Edit"/>
+                <input type="submit" name='form_action' value="Files" />
+                <input type="submit" name='form_action' value="Delete" />
+            </p>
+        </form>
+    </div>
+
+</body>
+</html>

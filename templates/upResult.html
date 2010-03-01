@@ -1,0 +1,34 @@
+$def with (filename, url)
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Upload Results</title>
+    <link rel="stylesheet" type="text/css" href="/static/style.css" />
+    <style type="text/css">
+        .link {
+            font-weight: bold;
+            color: #2B547E;
+            text-decoration: none;
+            font-size: 1.3em;
+        }
+        .link:hover {
+            text-decoration: underline;
+        }
+        .file {
+            color: #2B65EC;
+            text-decoration: none;
+        }
+        .file:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+<body>
+    $:render.head()
+    <div id="content">
+        <h1>Upload Results</h1>
+        <p style="font-size: 1.1em; margin-top: 10px;"><b>File:</b> <a class="file" href="$url">$filename</a></p>
+        <span><a class="link" href="$ctx.home/">Upload Another File</a></span>
+    </div>
+</body>
+</html>

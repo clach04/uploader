@@ -1,0 +1,70 @@
+$def with (form)
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"> 
+<html xmlns="http://www.w3.org/1999/xhtml">
+<head>
+    <title>Add Users</title>
+    <link rel="stylesheet" type="text/css" href="/static/style.css" />
+    <style type="text/css">
+        table {
+            text-align: left;
+        }
+    </style>
+    <script type="text/javascript" src="/static/days.js"></script>
+</head>
+<body onload="getDays()">
+$:render.head()
+    <div id="content">
+        <h1>Add User</h1>
+        <strong class="wrong" style="font-size: 1.2em;">$form.note</strong>
+        <form method="post" action="">
+            <table>
+                <tr>
+                    <th><label for="$form.username.name">$:form.username.description</label></th>
+                    <td>
+                        $:form.username.render()
+                        $:form.username.rendernote(form.username.note)
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="$form.password.name">$:form.password.description</label></th>
+                    <td>
+                        $:form.password.render()
+                        $:form.password.rendernote(form.password.note)
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="$form.password_again.name">$:form.password_again.description</label></th>
+                    <td>
+                        $:form.password_again.render()
+                        $:form.password_again.rendernote(form.password_again.note)
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="$form.credits.name">$:form.credits.description</label></th>
+                    <td>
+                        $:form.credits.render()
+                        $:form.credits.rendernote(form.credits.note)
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="$form.uType.name">$:form.uType.description</label></th>
+                    <td>
+                        $:form.uType.render()
+                        $:form.uType.rendernote(form.uType.note)
+                    </td>
+                </tr>
+                <tr>
+                    <th><label>Expiration:</label></th>
+                    <td>
+                        $:form.month.render()
+                        $:form.day.render()
+                        $:form.year.render()
+                    </td>
+                </tr>
+            </table>
+            <p><input type="submit" value="Add User"/></p>
+        </form>
+    </div>
+
+</body>
+</html>

@@ -1,0 +1,10 @@
+$def with ()
+<div id="head">
+    <span style="position: absolute; right: 0;"><a href="$ctx.home/logout">Logout</a></span>
+    <span><b>User:</b> $session.username </span>&nbsp;-&nbsp;
+    $if session.userType == 'admin':
+        <span><a href="$ctx.home/admin"><b>Administrator</b></a></span>
+    $else:
+        <span><b>Credits:</b> $session.credits </span>&nbsp;-&nbsp;
+        <span><b>Experation Date:</b> $session.expiration</span>
+</div>
