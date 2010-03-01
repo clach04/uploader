@@ -14,7 +14,8 @@ import itertools
 web.config.debug = False
 
 urls = (
-    '/', 'upload',
+    '/', 'index',
+    '/upload', 'upload',
     '/login', 'login',
     '/logout', 'logout',
     '/admin/adduser', 'adduser',
@@ -44,6 +45,7 @@ web.template.Template.globals['ctx'] = web.ctx
 
 filedir = '/home/http/pyther.net/uploads'
 uploaddir = 'http://pyther.net/uploads'
+
 
 def getSize(bytes):
     '''Crappy getSize function. Return B, KB, MB, or GB'''
@@ -88,6 +90,14 @@ def logged_in():
     else:
         return False
 
+def isAdmin():
+    if not logged_in():
+        return False
+    if getUserType() == 'admin':
+        return True
+    else:
+        return False
+
 def hasCredit(i):
     username = i.username 
     
@@ -108,11 +118,6 @@ def getUserType():
     results=list(db.select('users', myvar, where="name = $name"))
     return results[0].get('usertype')
 
-def isAdmin():
-    if getUserType() == 'admin':
-        return True
-    else:
-        return False
 
 def Expired(i):
     username = i.username
@@ -168,6 +173,22 @@ def removeCredit(usedCredit):
     
     session.credits=credits #Updates session.credits
     return
+
+def require_auth(func):
+    def wrapper(*args, **kwargs):
+        if not logged_in():
+            return render.error('userL')
+        else:
+            return func(*args,**kwargs)
+    return wrapper
+
+def require_admin(func):
+    def wrapper(*args, **kwargs):
+        if not isAdmin():
+            return render.error('adminL')
+        else:
+            return func(*args, **kwargs)
+    return wrapper
 
 adduser_form = form.Form(
     form.Textbox('username', form.notnull,description="Username:",size='15'),
@@ -246,9 +267,12 @@ login_form = form.Form(
     ]
 )
 
-class home:
+class index:
     def GET(self):
-        raise web.seeother('/')
+        if logged_in():
+            raise web.seeother('/upload')
+        else:
+            raise web.seeother('/login')
 
 class login:
     def GET(self):
@@ -277,16 +301,12 @@ class logout:
 
 
 class adduser:
-    def GET(self):
-        if not logged_in() or not isAdmin():
-            return render.error('403', '403 - Forbidden')
-        
+    @require_admin
+    def GET(self): 
         return render.admin_adduser(adduser_form)
 
-    def POST(self):
-        if not logged_in() or not isAdmin():
-            return render.error('403', '403 - Forbidden')
-        
+    @require_admin
+    def POST(self): 
         f = adduser_form()
         if f.validates():
             username = f.d.username
@@ -303,10 +323,8 @@ class adduser:
 
 
 class manageusers:
+    @require_admin
     def GET(self):
-        if not logged_in() or not isAdmin():
-            return render.error('403', '403 - Forbidden')
-
         i=web.input(msg='')
 
         msg = i.msg
@@ -338,10 +356,8 @@ class manageusers:
 
         return render.admin_users(admin, users, nocredits, expired, msg)
 
-    def POST(self):
-        if not logged_in() or not isAdmin():
-            return render.error('403', '403 - Forbidden')
-        
+    @require_admin
+    def POST(self): 
         i=web.input(chk=[])
 
         id = i.chk
@@ -368,10 +384,8 @@ class manageusers:
         return
 
 class edituser:
-    def GET(self):
-        if not logged_in() or not isAdmin():
-            return render.error('403', '403 - Forbidden')
-        
+    @require_admin
+    def GET(self): 
         i=web.input(id='')
         id = i.id
         
@@ -387,10 +401,8 @@ class edituser:
 
         return render.admin_edituser(f, username)
 
-    def POST(self):
-        if not logged_in() or not isAdmin():
-            return render.error('403', '403 - Forbidden')
-        
+    @require_admin
+    def POST(self): 
         f = edit_form()
         
         i = web.input(id='')
@@ -425,10 +437,8 @@ class edituser:
         raise web.seeother('/admin')
 
 class listfiles:
-    def GET(self):
-        if not logged_in() or not isAdmin():
-            return render.error('403', '403 - Forbidden')
-        
+    @require_admin
+    def GET(self):        
         i=web.input(id='')
         id = i.id
 
@@ -459,10 +469,8 @@ class listfiles:
 
         return render.admin_files(f, username)
 
-    def POST(self):
-        if not logged_in() or not isAdmin():
-            return render.error('403', '403 - Forbidden')
-        
+    @require_admin
+    def POST(self): 
         i=web.input(chk=[])
 
         files = i.chk
@@ -477,6 +485,7 @@ class listfiles:
         raise web.seeother('/admin/files?id='+str(id))
 
 class upload:
+    @require_auth
     def GET(self):
         if not logged_in():
             raise web.seeother('/login') 
@@ -487,7 +496,8 @@ class upload:
         else:
             cgi.maxlen = 20 * 1024 * 1024 # 20MB
         return render.upload('')
-        
+    
+    @require_auth
     def POST(self):
         if not logged_in():
             raise web.seeother('/login')
