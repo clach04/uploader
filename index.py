@@ -210,7 +210,7 @@ adduser_form = form.Form(
             ('11', 'November'),
             ('12', 'Decemember')
         ],
-        onclick="getDays()",
+        onchange="getDays()",
         description='Expiration Month:', value=str(datetime.now().month)
     ),
     form.Dropdown('day', [
@@ -219,7 +219,7 @@ adduser_form = form.Form(
             ('21'),('22'),('23'),('24'),('25'),('26'),('27'),('28'),('29'),('30'),('31')
         ], description='Expiration Day:', value=str(datetime.now().day)
     ),
-    form.Dropdown('year', [str(datetime.now().year),str(datetime.now().year+1),str(datetime.now().year+2)], description="Experation Year:", onclick="getDays()", value=str(datetime.now().year)),
+    form.Dropdown('year', [str(datetime.now().year),str(datetime.now().year+1),str(datetime.now().year+2)], description="Experation Year:", onchange="getDays()", value=str(datetime.now().year)),
     form.Dropdown('uType', ['user','admin'], description="User Type:", value="User:"),
     validators = [
         form.Validator("Passwords didn't match.", lambda i: i.password == i.password_again),
@@ -245,7 +245,7 @@ edit_form = form.Form(
             ('11', 'November'),
             ('12', 'Decemember')
         ],
-        onclick="getDays()",
+        onchange="getDays()",
         description='Expiration Month:'
     ),
     form.Dropdown('day', [
@@ -254,7 +254,7 @@ edit_form = form.Form(
             ('21'),('22'),('23'),('24'),('25'),('26'),('27'),('28'),('29'),('30'),('31')
         ], description='Expiration Day:'
     ),
-    form.Dropdown('year', [str(datetime.now().year),str(datetime.now().year+1),str(datetime.now().year+2)], description="Experation Year:", onclick="getDays()"),
+    form.Dropdown('year', [str(datetime.now().year),str(datetime.now().year+1),str(datetime.now().year+2)], description="Experation Year:", onchange="getDays()"),
     validators = []
 )
 
