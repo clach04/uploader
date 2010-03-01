@@ -1,1 +1,29 @@
-A webpy app that uses simple authentication to allow users to upload files
+Uploader by pyther <pyther@pyther.net>
+
+Uploader was created because I needed a simple platform to allow users to upload files
+to my web server. Uploader allows you to create users, set upload credit limits, and user 
+expiration dates.
+
+There is an Administration control panel to manage the users.
+
+Installation:
+    -Configure webserver correctly to use script
+    -Create Sqlite Database:
+        create table sessions (
+            session_id char(128) UNIQUE NOT NULL,
+            atime timestamp NOT NULL default current_timestamp,
+            data text
+        );
+        create table users (
+            id INTEGER PRIMARY KEY,
+            name VARCHAR(20),
+            password VARCHAR(20),
+            credits INTEGER,
+            exprdate DATETIME,
+            usertype BOOLEAN 
+        );
+
+        or copy the example.db (username: admin, password: admin)
+
+File bugs, feature requests, or anything else on the github page.
+
