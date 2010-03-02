@@ -27,15 +27,16 @@ urls = (
 app = web.application(urls,globals())
 
 #Session Timeout...
-web.config.session_parameters['timeout'] = 360 
-web.config.session_parameters['ignore_expiry'] = False
-web.config.session_parameters['expired_message'] = 'Session Expired... Please reload the page and login in again.'
+web.config.session_parameters['timeout'] = 900 #Session Time Out - 15 Minutes 
+web.config.session_parameters['ignore_expiry'] = False  #Defaults sets to true
+web.config.session_parameters['expired_message'] = 'Session Expired... Please reload the page and login in again.' #Error message when session expires
 
+#Initalizes and stores session information in sqlite database
 db = web.database(dbn="sqlite", db="app.db")
 store = web.session.DBStore(db, 'sessions')
 session = web.session.Session(app, store, initializer={'login': 0,'userType':'anonymous'})
 
-
+#Setup Template Rendering
 render = web.template.render('templates/')
 
 web.template.Template.globals['render'] = render
@@ -43,12 +44,13 @@ web.template.Template.globals['session'] = session
 web.template.Template.globals['datetime'] = datetime
 web.template.Template.globals['ctx'] = web.ctx
 
-filedir = '/home/http/pyther.net/uploads'
-uploaddir = 'http://pyther.net/uploads'
+filedir = '/home/http/pyther.net/uploads' #Physical Path to file uploads on file system
+uploaddir = 'http://pyther.net/uploads'   #Web Address to said uploads
 
-
+# Since there is no good predefined function we are going to do the math ourselves
+# We shouldn't need to go into terrabytes... at least not today!
 def getSize(bytes):
-    '''Crappy getSize function. Return B, KB, MB, or GB'''
+    '''getSize function. Return B, KB, MB, or GB'''
     bytes=float(bytes)
     KB=bytes/1024
 
@@ -66,6 +68,7 @@ def getSize(bytes):
     return str(round(GB,2)) + ' GB'
 
 def checkDupUser(i):
+    '''Checks to see if a user with the same name already exists.'''
     myvar = dict(name=i.username) 
     results=list(db.select('users', myvar, where="name = $name"))
  
@@ -75,7 +78,7 @@ def checkDupUser(i):
         return True
 
 def checkPasswd(i):
-    #print i.username
+    '''Checks password to see if the password entered is valid.'''
     username = i.username
     password = crypt.crypt(i.password, 'td')
     myvar = dict(name=username)
@@ -85,12 +88,15 @@ def checkPasswd(i):
     return password == login_password
 
 def logged_in():
+    '''True/False - User Logged In'''
     if session.login == 1:
         return True
     else:
         return False
 
 def isAdmin():
+    '''True/False - User is an Administrator'''
+    # If the user is not logged in the user can not be an Administrator
     if not logged_in():
         return False
     if getUserType() == 'admin':
@@ -104,7 +110,8 @@ def hasCredit(i):
     myvar = dict(name=username)
     results=list(db.select('users', myvar, where="name = $name"))
     credits=results[0].get('credits')
-
+    
+    #Administrators have unlimited credits
     if isAdmin():
         return True
     elif credits > 0:
@@ -112,6 +119,7 @@ def hasCredit(i):
     else:
         return False
 
+# Is the user an administrator or an users
 def getUserType():
     username = session.username
     myvar = dict(name=username)
@@ -120,6 +128,7 @@ def getUserType():
 
 
 def Expired(i):
+    '''Checks to see if the account has expired'''
     username = i.username
     
     myvar = dict(name=username)
@@ -141,7 +150,7 @@ def Expired(i):
         return False
 
 def getCredits():
-    
+    '''Returns number of credits user has''' 
     username=session.username
 
     myvar = dict(name=username)
@@ -174,6 +183,7 @@ def removeCredit(usedCredit):
     session.credits=credits #Updates session.credits
     return
 
+# The following two Decorators verify user access level
 def require_auth(func):
     def wrapper(*args, **kwargs):
         if not logged_in():
