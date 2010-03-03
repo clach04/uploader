@@ -91,7 +91,12 @@ def Expired(i):
     username = i.username
 
     result=list(db.select('users', dict(name=username), where="name = $name"))
-    user=result[0]
+    #user=result[0]
+    
+    if len(result) == 1:
+        user=result[0]
+    else:
+        raise DBEntry('Too Many Results!')
 
     expire=user.get('exprdate')
     usertype=user.get('usertype')
@@ -99,8 +104,6 @@ def Expired(i):
     # Administrator accounts should never expire!
     if usertype == 'admin':
         return True
-
-    print('Still Strong')
 
     expdb=datetime.strptime(expire, '%Y-%m-%d %H:%M:%S')
     now=datetime.now()
