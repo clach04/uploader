@@ -86,6 +86,31 @@ def checkDupUser(i):
     else:
         return True
 
+def Expired(i):
+    '''Checks to see if the account has expired'''
+    username = i.username
+
+    result=list(db.select('users', dict(name=username), where="name = $name"))
+    user=result[0]
+
+    expire=user.get('exprdate')
+    usertype=user.get('usertype')
+
+    # Administrator accounts should never expire!
+    if usertype == 'admin':
+        return True
+
+    print('Still Strong')
+
+    expdb=datetime.strptime(expire, '%Y-%m-%d %H:%M:%S')
+    now=datetime.now()
+    
+    if now.date() < expdb.date():
+        return True
+    else:
+        return False
+
+
 def checkPasswd(i):
     '''Checks password to see if the password entered is valid.'''
     typed_password = crypt.crypt(i.password, 'td') #Encrypted Typed Password
@@ -95,34 +120,8 @@ def checkPasswd(i):
     else:
         raise DBEntry('Too Many!')
     db_password=user.get('password') #Encrypted Password in Database
-
+    print 'Password Check'
     return typed_password == db_password
-
-def Expired(i):
-    '''Checks to see if the account has expired'''
-
-    username = i.username
-
-    user=list(db.select('users', dict(name=username), where="name = $name"))
-    if len(user) == 1:
-        user=user[0]
-    else:
-        raise DBEntry('Too Many!')
-
-    expire=user.get('exprdate')
-    usertype=user.get('usertype')
- 
-    # Administrator accounts should never expire!
-    if usertype == 'admin':
-        return True
-
-    expdb=datetime.strptime(expire, '%Y-%m-%d %H:%M:%S')
-    now=datetime.now()
-
-    if now.date < expdb.date:
-        return True
-    else:
-        return False
 
 # Database lookups + writes
 def getUserInfo(user):
