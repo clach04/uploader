@@ -6,5 +6,5 @@ $def with ()
         <span><a href="$ctx.home/admin"><b>Administrator</b></a></span>
     $else:
         <span><b>Credits:</b> $session.credits </span>&nbsp;-&nbsp;
-        <span><b>Experation Date:</b> $session.exprdate</span>
+        <span><b>Experation Date:</b> $session.exprdate.split(' ')[0]</span>
 </div>

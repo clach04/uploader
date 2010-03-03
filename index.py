@@ -46,10 +46,13 @@ web.template.Template.globals['ctx'] = web.ctx
 
 filedir = '/home/http/pyther.net/uploads' #Physical Path to file uploads on file system
 uploaddir = 'http://pyther.net/uploads'   #Web Address to said uploads
+#In bytes
+MaxSize=(20 * 1024 * 1024) # 20MB
+MaxSizeAdmin=0 #0 for Administrators
 
 
 #Exceptions
-class DuplicateDBEntry():
+class DBEntry():
     pass
 
 
@@ -77,7 +80,7 @@ def getSize(bytes):
 def checkDupUser(i):
     '''Checks to see if a user with the same name already exists.'''
     results=list(db.select('users', dict(name=i.username), where="name = $name"))
- 
+
     if len(results) > 0:
         return False
     else:
@@ -86,24 +89,28 @@ def checkDupUser(i):
 def checkPasswd(i):
     '''Checks password to see if the password entered is valid.'''
     typed_password = crypt.crypt(i.password, 'td') #Encrypted Typed Password
-    results=list(db.select('users', dict(name=i.username), where="name = $name"))
-    db_password=results[0].get('password') #Encrypted Password in Database
- 
+    user=list(db.select('users', dict(name=i.username), where="name = $name"))
+    if len(user) == 1:
+        user=user[0]
+    else:
+        raise DBEntry('Too Many!')
+    db_password=user.get('password') #Encrypted Password in Database
+
     return typed_password == db_password
 
 def Expired(i):
     '''Checks to see if the account has expired'''
-    
+
     username = i.username
-    
-    results=list(db.select('users', dict(name=username), where="name = $name"))
-    if len(results) != 1:
-        raise DuplicateDBEntry()
 
-    expire=results[0].get('exprdate')
+    user=list(db.select('users', dict(name=username), where="name = $name"))
+    if len(user) == 1:
+        user=user[0]
+    else:
+        raise DBEntry('Too Many!')
 
-
-    usertype=results[0].get('usertype')
+    expire=user.get('exprdate')
+    usertype=user.get('usertype')
  
     # Administrator accounts should never expire!
     if usertype == 'admin':
@@ -138,15 +145,13 @@ def getUserInfo(user):
 
 def removeCredit(usedCredit):
     #Ignore credit removal if user is an admin
-    if session.usertype=='admin':
-        return
+    if session.usertype=='admin': return
 
-    oldCredits=getCredits() #Updates session.credits and get credits from DB
-    credits = oldCredits - usedCredit
+    credits = session.credits - usedCredit
 
-    db.query("UPDATE users SET credits=$c WHERE name=$name", vars=dict(c=credits, name=session.username))
-    
+    db.query("UPDATE users SET credits=$c WHERE name=$name", vars=dict(c=credits, name=session.username)) 
     session.credits=credits #Updates session.credits
+
     return
 
 # The following two Decorators verify user access level
@@ -160,7 +165,9 @@ def require_auth(func):
 
 def require_admin(func):
     def wrapper(*args, **kwargs):
-        if not session.usertype=='admin':
+        if not session.login:
+            return render.error('userL')
+        elif not session.usertype=='admin':
             return render.error('adminL')
         else:
             return func(*args, **kwargs)
@@ -374,18 +381,19 @@ class edituser:
         i=web.input(id='')
         id = i.id
         
-        u = list(db.select('users', where="id=$id", vars=dict(id=id)))
-        
-        username=u[0].get('name')
+        user = list(db.select('users', where="id=$id", vars=dict(id=id)))
+        user=user[0]
+
+        username=user.get('name')
    
         # What is there to modify in admin user right now?
-        if u[0].get('usertype')=='admin':
+        if user.get('usertype')=='admin':
             raise web.seeother('/admin?msg='+'Administrators can\'t be edited!')
 
         f=edit_form
         
-        credits=u[0].get('credits')
-        expr=u[0].get('exprdate')
+        credits=user.get('credits')
+        expr=user.get('exprdate')
         y,m,d=expr.split(' ')[0].split('-')
         f.fill({'credits':credits, 'month':m, 'day':d, 'year':y})
 
@@ -476,22 +484,16 @@ class listfiles:
 
 class upload:
     @require_auth
-    def GET(self):
-        if not session.login:
-            raise web.seeother('/login') 
-    
-        
+    def GET(self):     
         if session.usertype=='admin':
-            cgi.maxlen = 0
+            cgi.maxlen = MaxSizeAdmin
         else:
-            cgi.maxlen = 20 * 1024 * 1024 # 20MB
+            cgi.maxlen = MaxSize
         return render.upload('')
     
     @require_auth
     def POST(self):
-        if not session.login:
-            raise web.seeother('/login')
-        elif session.credits <= 0:
+        if session.credits <= 0:
             return render.upload('No more upload Credits!')
         
         try:
