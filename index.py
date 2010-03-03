@@ -47,6 +47,12 @@ web.template.Template.globals['ctx'] = web.ctx
 filedir = '/home/http/pyther.net/uploads' #Physical Path to file uploads on file system
 uploaddir = 'http://pyther.net/uploads'   #Web Address to said uploads
 
+
+#Exceptions
+class DuplicateDBEntry():
+    pass
+
+
 # Since there is no good predefined function we are going to do the math ourselves
 # We shouldn't need to go into terrabytes... at least not today!
 def getSize(bytes):
@@ -67,10 +73,10 @@ def getSize(bytes):
     GB=MB/1024
     return str(round(GB,2)) + ' GB'
 
+# Form Validation checks
 def checkDupUser(i):
     '''Checks to see if a user with the same name already exists.'''
-    myvar = dict(name=i.username) 
-    results=list(db.select('users', myvar, where="name = $name"))
+    results=list(db.select('users', dict(name=i.username), where="name = $name"))
  
     if len(results) > 0:
         return False
@@ -79,62 +85,24 @@ def checkDupUser(i):
 
 def checkPasswd(i):
     '''Checks password to see if the password entered is valid.'''
-    username = i.username
-    password = crypt.crypt(i.password, 'td')
-    myvar = dict(name=username)
-    results=list(db.select('users', myvar, where="name = $name"))
-    login_password=results[0].get('password')
+    typed_password = crypt.crypt(i.password, 'td') #Encrypted Typed Password
+    results=list(db.select('users', dict(name=i.username), where="name = $name"))
+    db_password=results[0].get('password') #Encrypted Password in Database
  
-    return password == login_password
-
-def logged_in():
-    '''True/False - User Logged In'''
-    if session.login == 1:
-        return True
-    else:
-        return False
-
-def isAdmin():
-    '''True/False - User is an Administrator'''
-    # If the user is not logged in the user can not be an Administrator
-    if not logged_in():
-        return False
-    if getUserType() == 'admin':
-        return True
-    else:
-        return False
-
-def hasCredit(i):
-    username = i.username 
-    
-    myvar = dict(name=username)
-    results=list(db.select('users', myvar, where="name = $name"))
-    credits=results[0].get('credits')
-    
-    #Administrators have unlimited credits
-    if isAdmin():
-        return True
-    elif credits > 0:
-        return True
-    else:
-        return False
-
-# Is the user an administrator or an users
-def getUserType():
-    username = session.username
-    myvar = dict(name=username)
-    results=list(db.select('users', myvar, where="name = $name"))
-    return results[0].get('usertype')
-
+    return typed_password == db_password
 
 def Expired(i):
     '''Checks to see if the account has expired'''
+    
     username = i.username
     
-    myvar = dict(name=username)
-    results=list(db.select('users', myvar, where="name = $name"))
-    
+    results=list(db.select('users', dict(name=username), where="name = $name"))
+    if len(results) != 1:
+        raise DuplicateDBEntry()
+
     expire=results[0].get('exprdate')
+
+
     usertype=results[0].get('usertype')
  
     # Administrator accounts should never expire!
@@ -149,30 +117,28 @@ def Expired(i):
     else:
         return False
 
-def getCredits():
-    '''Returns number of credits user has''' 
-    username=session.username
+# Database lookups + writes
+def getUserInfo(user):
+    '''Return User Info: Username, Credits, Expiration, Type'''
 
-    myvar = dict(name=username)
-    results=list(db.select('users', myvar, where="name = $name"))
-    credits=int(results[0].get('credits'))
+    lookup=list(db.select('users', dict(name=user), where="name = $name"))
+    
+    if len(lookup) != 1:
+        raise DuplicateDBEntry() #I doubt this is the right error to raise...
 
-    session.credits=credits
+    name=lookup[0].get('name')
+    credits=lookup[0].get('credits')
+    exprdate=lookup[0].get('exprdate')
+    usertype=lookup[0].get('usertype')
 
-    return credits
+    return [name, credits, exprdate, usertype]
 
-def getExpr():
-    username=session.username
- 
-    myvar = dict(name=username)
-    results=list(db.select('users', myvar, where="name = $name"))
-    expire=results[0].get('exprdate')
 
-    return expire
+# Misc Functions ATM
 
 def removeCredit(usedCredit):
     #Ignore credit removal if user is an admin
-    if isAdmin():
+    if session.usertype=='admin':
         return
 
     oldCredits=getCredits() #Updates session.credits and get credits from DB
@@ -186,7 +152,7 @@ def removeCredit(usedCredit):
 # The following two Decorators verify user access level
 def require_auth(func):
     def wrapper(*args, **kwargs):
-        if not logged_in():
+        if not session.login:
             return render.error('userL')
         else:
             return func(*args,**kwargs)
@@ -194,7 +160,7 @@ def require_auth(func):
 
 def require_admin(func):
     def wrapper(*args, **kwargs):
-        if not isAdmin():
+        if not session.usertype=='admin':
             return render.error('adminL')
         else:
             return func(*args, **kwargs)
@@ -204,7 +170,7 @@ adduser_form = form.Form(
     form.Textbox('username', form.notnull,description="Username:",size='15'),
     form.Password('password', form.notnull, description="Password:",size='15'),
     form.Password('password_again', form.notnull, description="Password (again):",size='15'),
-    form.Textbox('credits', form.notnull, form.regexp('^\d+$', 'Must be a digit'), description="Upload Credits:",size='2'),
+    form.Textbox('credits', form.regexp('^\d+$', 'Must be a digit'), description="Upload Credits:",size='2'), #Allow a null entry for the administrator, do check via js
     form.Dropdown('month',
         [
             ('1', 'Janurary'),
@@ -279,14 +245,14 @@ login_form = form.Form(
 
 class index:
     def GET(self):
-        if logged_in():
+        if session.login:
             raise web.seeother('/upload')
         else:
             raise web.seeother('/login')
 
 class login:
     def GET(self):
-        if logged_in():
+        if session.login:
             raise web.seeother('/')
         return render.login(login_form)
 
@@ -294,11 +260,15 @@ class login:
         f = login_form()
        
         if f.validates():
+            #Get username, credits, exprdate, and usertype than store into session variables
+            name,credits,exprdate,usertype=getUserInfo(f.d.username)
+            
+            #Session Variables
             session.login = 1
-            session.username = f.d.username 
-            session.credits = getCredits()
-            session.expiration = getExpr().split(' ')[0]
-            session.userType = getUserType()
+            session.username = name 
+            session.credits = credits
+            session.exprdate = exprdate
+            session.usertype = usertype
             raise web.seeother('/')
         else:
             return render.login(f)
@@ -325,7 +295,11 @@ class adduser:
             date=datetime(int(f.d.year), int(f.d.month), int(f.d.day))
             userType=f.d.uType
 
-            data = {'name':username,'password':password,'credits':str(credits),'exprdate':str(date),'usertype':str(userType)}
+            if userType=='user':
+                data = {'name':username,'password':password,'credits':str(credits),'exprdate':str(date),'usertype':str(userType)}
+            elif userType=='admin':
+                data = {'name':username,'password':password,'credits':None,'exprdate':None,'usertype':str(userType)}
+            
             db.insert('users', **data)
             raise web.seeother('/admin')
         else:
@@ -335,31 +309,32 @@ class adduser:
 class manageusers:
     @require_admin
     def GET(self):
+        # Displays error messages on page if msg is passed
         i=web.input(msg='')
-
         msg = i.msg
 
-        data=list(db.select('users'))
+        # Read DB to get a list of users
+        users=list(db.select('users'))
 
-        users = []
-        for x in data:
-            users.append(x)
-
-        #Admin, Credits, Expr, Normal Users
+        #Admin, Credits, Expr - special user types
         admin=[]
         nocredits=[]
         expired=[]
 
-        for x in users: 
-            exprdate=datetime.strptime(x.get('exprdate'), '%Y-%m-%d %H:%M:%S')
-            credits=int(x.get('credits'))
-
+        # Go through all the users to see if they are either an admin
+        # if their account has expired or if they have ran out of credits 
+        for x in users:
             if x.get('usertype') == 'admin':
                 admin.append(x)
-            elif exprdate < datetime.now():
-                expired.append(x)
-            elif credits <= 0:
-                nocredits.append(x)
+            else:
+                # We don't want users listed in both Expired and No Credits
+                # Users who have both expired and have no more credits will be listed as expired
+                exprdate=datetime.strptime(x.get('exprdate'), '%Y-%m-%d %H:%M:%S')
+                credits=int(x.get('credits'))
+                if exprdate < datetime.now():
+                    expired.append(x)
+                elif credits <= 0:
+                    nocredits.append(x)
 
         for removal in itertools.chain(admin, nocredits, expired):
             users.remove(removal)
@@ -402,11 +377,16 @@ class edituser:
         u = list(db.select('users', where="id=$id", vars=dict(id=id)))
         
         username=u[0].get('name')
+   
+        # What is there to modify in admin user right now?
+        if u[0].get('usertype')=='admin':
+            raise web.seeother('/admin?msg='+'Administrators can\'t be edited!')
+
+        f=edit_form
+        
         credits=u[0].get('credits')
         expr=u[0].get('exprdate')
         y,m,d=expr.split(' ')[0].split('-')
-
-        f=edit_form
         f.fill({'credits':credits, 'month':m, 'day':d, 'year':y})
 
         return render.admin_edituser(f, username)
@@ -497,11 +477,11 @@ class listfiles:
 class upload:
     @require_auth
     def GET(self):
-        if not logged_in():
+        if not session.login:
             raise web.seeother('/login') 
     
         
-        if isAdmin():
+        if session.usertype=='admin':
             cgi.maxlen = 0
         else:
             cgi.maxlen = 20 * 1024 * 1024 # 20MB
@@ -509,9 +489,9 @@ class upload:
     
     @require_auth
     def POST(self):
-        if not logged_in():
+        if not session.login:
             raise web.seeother('/login')
-        elif getCredits() <= 0:
+        elif session.credits <= 0:
             return render.upload('No more upload Credits!')
         
         try:

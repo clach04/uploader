@@ -3,10 +3,13 @@ $def with (admin, users, nocredits, expired, msg)
 
 $code:
     def UserInfo(x):
+        if x.usertype=='admin':
+            expr=x.exprdate #We don't want to split this, because this value should be None
+        else:
+            expr=x.exprdate.split(' ')[0]
         username=x.name
-        credits=x.credits
-        expr=x.exprdate.split(' ')[0]
         id=x.id
+        credits=x.credits
         usertype=x.usertype
         
         return [id, username, credits, expr, usertype]
@@ -61,8 +64,8 @@ $:render.head()
                     <tr>
                         $ u = UserInfo(x)
                         <td style="font-weight: bold; color: red;">$u[1]</td>
-                        <td>-</td>
-                        <td>-</td>
+                        <td></td>
+                        <td></td>
                         <td><input id="chk_$u[0]" value="$u[0]" name="chk" type="checkbox"/></td>
                     </tr>
                 $for x in users:
