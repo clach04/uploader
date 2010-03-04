@@ -288,33 +288,6 @@ class logout:
         session.kill()
         raise web.seeother('/login')
 
-
-class adduser:
-    @require_admin
-    def GET(self): 
-        return render.admin_adduser(adduser_form)
-
-    @require_admin
-    def POST(self): 
-        f = adduser_form()
-        if f.validates():
-            username = f.d.username
-            password = crypt.crypt(f.d.password, 'td')
-            credits=f.d.credits
-            date=datetime(int(f.d.year), int(f.d.month), int(f.d.day))
-            userType=f.d.uType
-
-            if userType=='user':
-                data = {'name':username,'password':password,'credits':str(credits),'exprdate':str(date),'usertype':str(userType)}
-            elif userType=='admin':
-                data = {'name':username,'password':password,'credits':None,'exprdate':None,'usertype':str(userType)}
-            
-            db.insert('users', **data)
-            raise web.seeother('/admin')
-        else:
-            return render.admin_adduser(f)
-
-
 class manageusers:
     @require_admin
     def GET(self):
@@ -376,6 +349,31 @@ class manageusers:
         elif i.form_action == 'Add':
             raise web.seeother('/admin/adduser')
         return
+
+class adduser:
+    @require_admin
+    def GET(self): 
+        return render.admin_adduser(adduser_form)
+
+    @require_admin
+    def POST(self): 
+        f = adduser_form()
+        if f.validates():
+            username = f.d.username
+            password = crypt.crypt(f.d.password, 'td')
+            credits=f.d.credits
+            date=datetime(int(f.d.year), int(f.d.month), int(f.d.day))
+            userType=f.d.uType
+
+            if userType=='user':
+                data = {'name':username,'password':password,'credits':str(credits),'exprdate':str(date),'usertype':str(userType)}
+            elif userType=='admin':
+                data = {'name':username,'password':password,'credits':None,'exprdate':None,'usertype':str(userType)}
+            
+            db.insert('users', **data)
+            raise web.seeother('/admin')
+        else:
+            return render.admin_adduser(f)
 
 class edituser:
     @require_admin
