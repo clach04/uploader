@@ -10,6 +10,20 @@ $def with (form)
         }
     </style>
     <script type="text/javascript" src="/static/days.js"></script>
+    <script type="text/javascript">
+        function isAdmin() {
+            var usertype = document.getElementById('uType').value;
+
+            if (usertype == 'admin') {
+                document.getElementById('exprRow').style.visibility = 'collapse';
+                document.getElementById('creditsRow').style.visibility = 'collapse';
+            }
+            else { 
+                document.getElementById('exprRow').style.visibility = 'visible';
+                document.getElementById('creditsRow').style.visibility = 'visible';
+            }
+        }
+    </script>
 </head>
 <body onload="getDays()">
 $:render.head()
@@ -39,7 +53,7 @@ $:render.head()
                         $:form.password_again.rendernote(form.password_again.note)
                     </td>
                 </tr>
-                <tr>
+                <tr id="creditsRow">
                     <th><label for="$form.credits.name">$:form.credits.description</label></th>
                     <td>
                         $:form.credits.render()
@@ -53,7 +67,7 @@ $:render.head()
                         $:form.uType.rendernote(form.uType.note)
                     </td>
                 </tr>
-                <tr>
+                <tr id="exprRow">
                     <th><label>Expiration:</label></th>
                     <td>
                         $:form.month.render()

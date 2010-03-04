@@ -123,7 +123,6 @@ def checkPasswd(i):
     else:
         raise DBEntry('Too Many!')
     db_password=user.get('password') #Encrypted Password in Database
-    print 'Password Check'
     return typed_password == db_password
 
 # Database lookups + writes
@@ -205,7 +204,7 @@ adduser_form = form.Form(
         ], description='Expiration Day:', value=str(datetime.now().day)
     ),
     form.Dropdown('year', [str(datetime.now().year),str(datetime.now().year+1),str(datetime.now().year+2)], description="Experation Year:", onchange="getDays()", value=str(datetime.now().year)),
-    form.Dropdown('uType', ['user','admin'], description="User Type:", value="User:"),
+    form.Dropdown('uType', ['user','admin'], description="User Type:", value="User:", onchange="isAdmin()"),
     validators = [
         form.Validator("Passwords didn't match.", lambda i: i.password == i.password_again),
         form.Validator("Duplicate User.", checkDupUser)
