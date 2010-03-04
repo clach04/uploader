@@ -318,8 +318,10 @@ class manageusers:
                 elif credits <= 0:
                     nocredits.append(x)
 
-        for removal in itertools.chain(admin, nocredits, expired):
-            users.remove(removal)
+        # Remove users that are Administrators, have 0 credits, or are expired
+        # Remaining users must be valid users
+        for invalid in itertools.chain(admin, nocredits, expired):
+            users.remove(invalid)
 
         return render.admin_users(admin, users, nocredits, expired, msg)
 
@@ -327,26 +329,33 @@ class manageusers:
     def POST(self): 
         i=web.input(chk=[])
 
+        #Store all the checked users
         id = i.chk
 
         if i.form_action == 'Delete':
+            # Delete Users
             for x in id:
                 db.delete('users', where="id=$id", vars=dict(id=x))
             
             return web.seeother('/admin')
         elif i.form_action == 'Edit':
+            #Edit a user
             if len(id) == 1:
-                id=str(id[0])
+                id=str(id[0]) #There is only one user id so clobber id with it
                 raise web.seeother('/admin/edit?id='+id)
             else:
+                # We can't edit more than one user at a time... Issue a warning
                 return web.seeother('/admin?msg='+'Select only one user to edit')
         elif i.form_action == 'Files':
+            #List Files
             if len(id) == 1:
-                id=str(id[0])
+                id=str(id[0]) #There is only one user id so clobber id with it
                 raise web.seeother('/admin/files?id='+id)
             else:
+                #We don't have support to show more than one user's files
                 return web.seeother('/admin?msg='+'You can only select one user!')
         elif i.form_action == 'Add':
+            #Show Add User Page
             raise web.seeother('/admin/adduser')
         return
 
