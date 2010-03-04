@@ -40,7 +40,10 @@ $:render.head()
                 </tr>
                 <tr>
                     <th><label for="$form.credits.name">$:form.credits.description</label></th>
-                    <td>$:form.credits.render()</td>
+                    <td>
+                        $:form.credits.render()
+                        $:form.credits.rendernote(form.credits.note)
+                    </td>
                 </tr>
                 <tr>
                     <th><label>Expiration:</label></th>

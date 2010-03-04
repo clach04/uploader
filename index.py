@@ -412,12 +412,14 @@ class edituser:
         if not id:
             raise web.seeother('/admin')
  
+        u = list(db.select('users', where="id=$id", vars=dict(id=id)))
+    
+        username=u[0].get('name')
+        
         if f.validates():
             newExpr=datetime( int(f.d.year), int(f.d.month), int(f.d.day))
             newCredits=str(f.d.credits)
-             
-            u = list(db.select('users', where="id=$id", vars=dict(id=id)))
-            
+                 
             #Can't edit an admin
             if u[0].get('usertype') == 'admin':
                 raise web.seeother('/admin')
@@ -431,7 +433,8 @@ class edituser:
             if not oldCredits == newCredits:
                 db.update('users', where="id=$id", credits=newCredits, vars=dict(id=id) )
         else:
-            return render.admin_edituser(f,'')
+            f.fill({'month':f.d.month, 'day':f.d.day, 'year':f.d.year})
+            return render.admin_edituser(f,username)
 
 
         raise web.seeother('/admin')
