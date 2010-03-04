@@ -178,7 +178,7 @@ adduser_form = form.Form(
     form.Textbox('username', form.notnull,description="Username:",size='15'),
     form.Password('password', form.notnull, description="Password:",size='15'),
     form.Password('password_again', form.notnull, description="Password (again):",size='15'),
-    form.Textbox('credits', form.regexp('^\d+$', 'Must be a digit'), description="Upload Credits:",size='2'), #Allow a null entry for the administrator, do check via js
+    form.Textbox('credits', form.notnull, form.regexp('^\d+$', 'Must be a digit'), description="Upload Credits:",size='2',value='0'), #Set the default to 0 so the form will validate if it's an admin account
     form.Dropdown('month',
         [
             ('1', 'Janurary'),
@@ -201,7 +201,7 @@ adduser_form = form.Form(
             ('1'),('2'),('3'),('4'),('5'),('6'),('7'),('8'),('9'),('10'),
             ('11'),('12'),('13'),('14'),('15'),('16'),('17'),('18'),('19'),('20'),
             ('21'),('22'),('23'),('24'),('25'),('26'),('27'),('28'),('29'),('30'),('31')
-        ], description='Expiration Day:', value=str(datetime.now().day)
+        ], description='Expiration Day:', value=str(datetime.now().day+1)
     ),
     form.Dropdown('year', [str(datetime.now().year),str(datetime.now().year+1),str(datetime.now().year+2)], description="Experation Year:", onchange="getDays()", value=str(datetime.now().year)),
     form.Dropdown('uType', ['user','admin'], description="User Type:", value="User:", onchange="isAdmin()"),
@@ -367,20 +367,24 @@ class adduser:
     def POST(self): 
         f = adduser_form()
         if f.validates():
-            username = f.d.username
+            # If the form validates store variables locally and insert them into the database 
+            username = f.d.username.lower()
             password = crypt.crypt(f.d.password, 'td')
-            credits=f.d.credits
-            date=datetime(int(f.d.year), int(f.d.month), int(f.d.day))
+            credits = f.d.credits
+            date = datetime(int(f.d.year), int(f.d.month), int(f.d.day))
             userType=f.d.uType
 
+            #Store data into the db
             if userType=='user':
                 data = {'name':username,'password':password,'credits':str(credits),'exprdate':str(date),'usertype':str(userType)}
+            #Administrator entries credits and exprdate entries are going to be NULL
             elif userType=='admin':
                 data = {'name':username,'password':password,'credits':None,'exprdate':None,'usertype':str(userType)}
             
             db.insert('users', **data)
             raise web.seeother('/admin')
         else:
+            # If the form does not validate render the form again (this will show errors to the user)
             return render.admin_adduser(f)
 
 class edituser:
@@ -419,18 +423,22 @@ class edituser:
             raise web.seeother('/admin')
  
         u = list(db.select('users', where="id=$id", vars=dict(id=id)))
-    
-        username=u[0].get('name')
+        if len(u) == 1:
+            user=u[0]
+        else:
+            raise DBEntry('Too many Entries!')
+
+        username=u.get('name')
         
         if f.validates():
             newExpr=datetime( int(f.d.year), int(f.d.month), int(f.d.day))
             newCredits=str(f.d.credits)
                  
             #Can't edit an admin
-            if u[0].get('usertype') == 'admin':
+            if user.get('usertype') == 'admin':
                 raise web.seeother('/admin')
 
-            oldCredits = u[0].get('credits')
+            oldCredits = user.get('credits')
             oldExpr=datetime.strptime(u[0].get('exprdate'), '%Y-%m-%d %H:%M:%S')
 
             if not oldExpr == newExpr:
@@ -439,9 +447,9 @@ class edituser:
             if not oldCredits == newCredits:
                 db.update('users', where="id=$id", credits=newCredits, vars=dict(id=id) )
         else:
+            #Fill in the form with the values that were submitted
             f.fill({'month':f.d.month, 'day':f.d.day, 'year':f.d.year})
             return render.admin_edituser(f,username)
-
 
         raise web.seeother('/admin')
 
@@ -455,25 +463,34 @@ class listfiles:
             raise web.seeother('/admin')
 
         u = list(db.select('users', where="id=$id", vars=dict(id=id)))        
-        username=u[0].get('name')
+        if len(u) == 1:
+            user=u[0]
+        else:
+            raise DBEntry('Too Many Entries')
+
+
+        username=user.get('name')
 
         dir=os.path.join(filedir, username)
-
-        try:
+        # Check to see if a directory exists
+        # If exists get a file listing if there are no files, the variable files will still be empty
+        if os.path.isdir(dir):
             files=os.listdir(dir) #There should never be subdirectories
-        except OSError:
+        else:
             files=[]
 
         url = []
         size = []
         if files:
+            #Go through all the files and generate their urls
             for x in files:
                 url.append(uploaddir+'/'+username+'/'+x)
 
+            #Go through all the files and get their size
             for x in files:
                 s=os.path.getsize(os.path.join(filedir,username,x))
                 size.append(getSize(s))
-
+        #Merge file names, urls, and sizes together
         f = zip(files, url, size)
 
         return render.admin_files(f, username)

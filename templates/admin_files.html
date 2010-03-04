@@ -39,14 +39,11 @@ $def with (files, username)
 <body>
 $:render.head()
     <div id="content">
-        <h1>Delete $username's Files</h1>
         $if not files:
-            <div id="nofiles">
-                <strong style="color: red;">No Files!!</strong>
-                <br/><br/>
-                <a href="$ctx.home/admin">Back</a>
-            </div>
+            <h1>No Files Found for $username</h1>
+            <a style="font-size: 1.3em;" href="$ctx.home/admin">Back</a>
         $else:
+            <h1>$username's Files</h1> 
             <form method="post" action="">
                 <table>
                     <colgroup align="left" style="text-align: left;"></colgroup>
