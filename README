@@ -1,7 +1,7 @@
 Uploader by pyther <pyther@pyther.net>
 
 What is Uploader?
-Uploader is a simple web application that allows users to upload files to a web server
+Uploader is a simple webpy application that allows users to upload files to a web server
 and has support for user authentication. There is support for upload credits and user
 expiration dates.
 
@@ -16,6 +16,10 @@ Features:
  -Add users easily
 
 Installation:
+    -Run Locally
+       python index.py (http://localhost:8080)
+       Not Recommend for daily usage
+
     -Configure the webserver correctly to use webpy script
     ***Lighttpd Example***
     
@@ -57,7 +61,9 @@ Installation:
 
         To generate the password hash: python -c "import crypt; print crypt.crypt('yourPassword', 'td')"
 
-        Alternatively copy the example.db (username: admin, password: admin)
+        Alternatively use the example.db (username: admin, password: admin)
+
+        Rename the database to app.db
 
     -Configure some simple variables in index.py
         uploadpath = physical path where all uploads will be stored - ex: /srv/http/example.com/uploads/
