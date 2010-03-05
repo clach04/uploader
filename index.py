@@ -297,9 +297,9 @@ class login:
             #Session Variables
             session.login = 1
             session.username = name 
-            session.credits = credits
             session.exprdate = exprdate
             session.usertype = usertype
+            session.credits = credits
             raise web.seeother('/')
         else:
             return render.login(f)
@@ -567,7 +567,8 @@ class upload:
     
     @require_auth
     def POST(self):
-        if session.credits <= 0:
+        #If the user has no more upload credits and is NOT an admin
+        if session.credits <= 0 and not session.usertype=='admin':
             return render.upload('No more upload Credits!')
         
         try:
