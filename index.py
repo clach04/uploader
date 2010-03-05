@@ -108,11 +108,7 @@ def Expired(i):
 
     expdb=datetime.strptime(expire, '%Y-%m-%d %H:%M:%S')
     now=datetime.now()
-<<<<<<< HEAD
-
-=======
     
->>>>>>> testing
     if now.date() < expdb.date():
         return True
     else:
