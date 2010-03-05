@@ -13,6 +13,12 @@ import itertools
 #Must be disabled, otherwise sessions break!!!
 web.config.debug = False
 
+filedir = '/home/http/pyther.net/uploads' #Physical Path to file uploads on file system
+uploaddir = 'http://pyther.net/uploads'   #Web Address to said uploads
+#In bytes
+MaxSize=(20 * 1024 * 1024) # 20MB
+MaxSizeAdmin=0 #0 for Administrators
+
 urls = (
     '/', 'index',
     '/upload', 'upload',
@@ -44,12 +50,7 @@ web.template.Template.globals['render'] = render
 web.template.Template.globals['session'] = session
 web.template.Template.globals['datetime'] = datetime
 web.template.Template.globals['ctx'] = web.ctx
-
-filedir = '/home/http/pyther.net/uploads' #Physical Path to file uploads on file system
-uploaddir = 'http://pyther.net/uploads'   #Web Address to said uploads
-#In bytes
-MaxSize=(20 * 1024 * 1024) # 20MB
-MaxSizeAdmin=0 #0 for Administrators
+web.template.Template.globals['uploaddir'] = uploaddir
 
 
 #Exceptions
