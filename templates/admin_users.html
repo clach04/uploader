@@ -3,10 +3,13 @@ $def with (admin, users, nocredits, expired, msg)
 
 $code:
     def UserInfo(x):
+        if x.usertype=='admin':
+            expr=x.exprdate #We don't want to split this, because this value should be None
+        else:
+            expr=x.exprdate.split(' ')[0]
         username=x.name
-        credits=x.credits
-        expr=x.exprdate.split(' ')[0]
         id=x.id
+        credits=x.credits
         usertype=x.usertype
         
         return [id, username, credits, expr, usertype]
@@ -20,14 +23,9 @@ $code:
     #content {
         padding: 10px 20px 0;
     }
-    h2 {
+    h3 {
         font-size: 1.3em;
         color: #2B547E;
-    }
-    #admin {
-        padding: 5px;
-        border-top: 1px solid #000;
-        border-bottom: 0;
     }
     table {
         border: 1px solid #000;
@@ -47,9 +45,10 @@ $code:
 $:render.head()
     <div id="content">
         <h1>Users</h1>
-        <strong class="Wrong" style="color: red;">$msg</strong>
+        $if msg:
+            <h2 class="Wrong" style="color: red;">$msg</h2>
         <form method="post" action="">
-            <h2>Active Users</h2>
+            <h3>Active Users</h3>
             <table>
                 <tr>
                     <th>Username</th>
@@ -61,8 +60,8 @@ $:render.head()
                     <tr>
                         $ u = UserInfo(x)
                         <td style="font-weight: bold; color: red;">$u[1]</td>
-                        <td>-</td>
-                        <td>-</td>
+                        <td></td>
+                        <td></td>
                         <td><input id="chk_$u[0]" value="$u[0]" name="chk" type="checkbox"/></td>
                     </tr>
                 $for x in users:
@@ -75,7 +74,7 @@ $:render.head()
                     </tr>
             </table>
             <br/>
-            <h2>Invalid Users</h2>
+            <h3>Invalid Users</h3>
             <table>
                 <tr>
                     <th>Username</th>

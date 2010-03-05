@@ -6,18 +6,6 @@ $def with (files, username)
     <title>$username's Files</title>
     <link rel="stylesheet" type="text/css" href="/static/style.css" />
     <style type="text/css">
-    #content {
-        padding: 10px 20px 0;
-    }
-    h2 {
-        font-size: 1em;
-        margin: 0;
-    }
-    #admin {
-        padding: 5px;
-        border-top: 1px solid #000;
-        border-bottom: 0;
-    }
     table {
         border: 1px solid #000;
         border-collapse: collapse;
@@ -39,14 +27,11 @@ $def with (files, username)
 <body>
 $:render.head()
     <div id="content">
-        <h1>Delete $username's Files</h1>
         $if not files:
-            <div id="nofiles">
-                <strong style="color: red;">No Files!!</strong>
-                <br/><br/>
-                <a href="$ctx.home/admin">Back</a>
-            </div>
+            <h1>No Files Found for $username</h1>
+            <a style="font-size: 1.3em;" href="$ctx.home/admin">Back</a>
         $else:
+            <h1>$username's Files</h1> 
             <form method="post" action="">
                 <table>
                     <colgroup align="left" style="text-align: left;"></colgroup>

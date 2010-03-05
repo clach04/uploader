@@ -6,23 +6,7 @@ $def with (form, username)
     <title>Edit User</title>
     <link rel="stylesheet" type="text/css" href="/static/style.css" />
     <style type="text/css">
-    h2 {
-        font-size: 1em;
-        margin: 0;
-    }
-    #admin {
-        text-align: left;
-    }
-    #admin ul {
-        margin: 10px 0 0 20px;
-        padding: 0;
-    }
-    #admin ul li {
-        display: inline;
-        padding: 0 10px 0 0;
-    }
     table {
-        border: 0px solid #000;
         text-align: left;
     }
     </style>
@@ -40,7 +24,17 @@ $:render.head()
                 </tr>
                 <tr>
                     <th><label for="$form.credits.name">$:form.credits.description</label></th>
-                    <td>$:form.credits.render()</td>
+                    <td>
+                        $:form.credits.render()
+                        $:form.credits.rendernote(form.credits.note)
+                    </td>
+                </tr>
+                <tr>
+                    <th><label for="$form.password.name">$:form.password.description</label></th>
+                    <td>
+                        $:form.password.render()
+                        $:form.password.rendernote(form.password.note)
+                    </td>
                 </tr>
                 <tr>
                     <th><label>Expiration:</label></th>
