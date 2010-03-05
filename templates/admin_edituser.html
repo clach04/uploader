@@ -30,6 +30,13 @@ $:render.head()
                     </td>
                 </tr>
                 <tr>
+                    <th><label for="$form.password.name">$:form.password.description</label></th>
+                    <td>
+                        $:form.password.render()
+                        $:form.password.rendernote(form.password.note)
+                    </td>
+                </tr>
+                <tr>
                     <th><label>Expiration:</label></th>
                     <td>
                         $:form.month.render()

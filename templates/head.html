@@ -1,8 +1,9 @@
 $def with ()
 
 $code:
-    y,m,d=session.exprdate.split(' ')[0].split('-')
-    exp=m+'/'+d+'/'+y
+    if session.usertype == 'user':
+        y,m,d=session.exprdate.split(' ')[0].split('-')
+        exp=m+'/'+d+'/'+y
 
 <div id="head">
     <span style="position: absolute; right: 5px;">

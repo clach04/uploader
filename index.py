@@ -251,6 +251,7 @@ edit_form = form.Form(
         ], description='Expiration Day:'
     ),
     form.Dropdown('year', [str(datetime.now().year),str(datetime.now().year+1),str(datetime.now().year+2)], description="Experation Year:", onchange="getDays()"),
+    form.Password('password', description="Password:"),
     validators = []
 )
 
@@ -450,12 +451,14 @@ class edituser:
         else:
             raise DBEntry('Too many Entries!')
 
-        username=u.get('name')
+        username=user.get('name')
         
         if f.validates():
             newExpr=datetime( int(f.d.year), int(f.d.month), int(f.d.day))
             newCredits=str(f.d.credits)
-                 
+            password=f.d.password
+
+
             #Can't edit an admin
             if user.get('usertype') == 'admin':
                 raise web.seeother('/admin')
@@ -468,6 +471,11 @@ class edituser:
 
             if not oldCredits == newCredits:
                 db.update('users', where="id=$id", credits=newCredits, vars=dict(id=id) )
+            
+            #Change Password if one was entered
+            if password:
+                newPass = crypt.crypt(password, 'td') #Encrypted Typed Password
+                db.update('users', where="id=$id", password=newPass, vars=dict(id=id) )
         else:
             #Fill in the form with the values that were submitted
             f.fill({'month':f.d.month, 'day':f.d.day, 'year':f.d.year})
