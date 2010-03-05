@@ -18,6 +18,7 @@ urls = (
     '/upload', 'upload',
     '/login', 'login',
     '/logout', 'logout',
+    '/password', 'password',
     '/admin/adduser', 'adduser',
     '/admin', 'manageusers',
     '/admin/edit', 'edituser',
@@ -114,10 +115,21 @@ def Expired(i):
         return False
 
 
-def checkPasswd(i):
+#Multiple funciton because login need i.username where the change password needs session.username
+def checkLoginPasswd(i):
     '''Checks password to see if the password entered is valid.'''
-    typed_password = crypt.crypt(i.password, 'td') #Encrypted Typed Password
-    user=list(db.select('users', dict(name=i.username), where="name = $name"))
+    username=i.username
+    password=i.password
+    return checkpassword(username,password)
+
+def checkChangePasswd(i):
+    username=session.username
+    password=i.password
+    return checkpassword(username,password)
+
+def checkpassword(username,password):
+    typed_password = crypt.crypt(password, 'td') #Encrypted Typed Password
+    user=list(db.select('users', dict(name=username), where="name = $name"))
     if len(user) == 1:
         user=user[0]
     else:
@@ -246,8 +258,18 @@ login_form = form.Form(
     form.Textbox('username', form.notnull,description="Username:"),
     form.Password('password', form.notnull, description="Password:"),
     validators = [
-        form.Validator("Incorrect UserName/Password Combo", checkPasswd), 
+        form.Validator("Incorrect UserName/Password Combo", checkLoginPasswd), 
         form.Validator("Account has expired!!", Expired),
+    ]
+)
+
+changePass_form = form.Form(
+    form.Password('password', form.notnull, description="Old Password:"),
+    form.Password('newPass1', form.notnull, description="New Password:"),
+    form.Password('newPass2', form.notnull, description="New Password (again):"),
+    validators = [
+        form.Validator("Wrong Password", checkChangePasswd),
+        form.Validator("Passwords didn't match.", lambda i: i.newPass1 == i.newPass2),
     ]
 )
 
@@ -509,6 +531,22 @@ class listfiles:
         id=u[0].get('id')
         
         raise web.seeother('/admin/files?id='+str(id))
+
+class password:
+    @require_auth
+    def GET(self):
+        return render.password(changePass_form,'')
+
+    @require_auth
+    def POST(self):
+        f = changePass_form()
+        if f.validates():
+            username = session.username
+            password = crypt.crypt(f.d.newPass1, 'td') #Encrypted Typed Password
+            db.update('users', where="name=$username", password=password, vars=dict(username=username))
+        else:
+            return render.password(f,'')
+        return render.password(f, 'Password Changed Successfully')
 
 class upload:
     @require_auth
