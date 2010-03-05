@@ -555,7 +555,7 @@ class password:
             db.update('users', where="name=$username", password=password, vars=dict(username=username))
         else:
             return render.password(f,'')
-        return render.password(f, 'Password Changed Successfully')
+        return render.password(changePass_form, 'Password Changed Successfully')
 
 class upload:
     @require_auth
