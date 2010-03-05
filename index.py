@@ -7,15 +7,16 @@ import crypt
 import os
 import cgi
 from datetime import datetime
-import sys
 import itertools
 
 #Must be disabled, otherwise sessions break!!!
 web.config.debug = False
 
-filedir = '/home/http/pyther.net/uploads' #Physical Path to file uploads on file system
-uploaddir = 'http://pyther.net/uploads'   #Web Address to said uploads
-#In bytes
+# Configuration Settings
+uploadpath = '/home/http/pyther.net/uploads' #Physical Path to file uploads on file system
+uploadurl = 'http://pyther.net/uploads'   #Web Address to said uploads
+
+#Values must be in bytes
 MaxSize=(20 * 1024 * 1024) # 20MB
 MaxSizeAdmin=0 #0 for Administrators
 
@@ -50,7 +51,7 @@ web.template.Template.globals['render'] = render
 web.template.Template.globals['session'] = session
 web.template.Template.globals['datetime'] = datetime
 web.template.Template.globals['ctx'] = web.ctx
-web.template.Template.globals['uploaddir'] = uploaddir
+web.template.Template.globals['uploadurl'] = uploadurl
 
 
 #Exceptions
@@ -502,7 +503,7 @@ class listfiles:
 
         username=user.get('name')
 
-        dir=os.path.join(filedir, username)
+        dir=os.path.join(uploadpath, username)
         # Check to see if a directory exists
         # If exists get a file listing if there are no files, the variable files will still be empty
         if os.path.isdir(dir):
@@ -515,11 +516,11 @@ class listfiles:
         if files:
             #Go through all the files and generate their urls
             for x in files:
-                url.append(uploaddir+'/'+username+'/'+x)
+                url.append(uploadurl+'/'+username+'/'+x)
 
             #Go through all the files and get their size
             for x in files:
-                s=os.path.getsize(os.path.join(filedir,username,x))
+                s=os.path.getsize(os.path.join(uploadpath,username,x))
                 size.append(getSize(s))
         #Merge file names, urls, and sizes together
         f = zip(files, url, size)
@@ -534,7 +535,7 @@ class listfiles:
         username = i.username
 
         for x in files:
-            os.remove(os.path.join(filedir, username, x))
+            os.remove(os.path.join(uploadpath, username, x))
 
         u = list(db.select('users', where="name=$username", vars=dict(username=username)))        
         id=u[0].get('id')
@@ -584,7 +585,7 @@ class upload:
             filepath=x.upfile.filename.replace('\\','/')
             filename=filepath.split('/')[-1]
 
-            path = os.path.join(filedir, session.username)
+            path = os.path.join(uploadpath, session.username)
             newFile = os.path.join(path, filename)
             
             #Creates folder for specific user
@@ -599,7 +600,7 @@ class upload:
 
             os.chmod(newFile, 0644) #Just to be on the safe side
     
-            url=uploaddir+'/'+session.username+"/"+filename
+            url=uploadurl+'/'+session.username+"/"+filename
 
         return render.upResult(filename, url)
         

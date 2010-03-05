@@ -1,13 +1,42 @@
 Uploader by pyther <pyther@pyther.net>
 
-Uploader was created because I needed a simple platform to allow users to upload files
-to my web server. Uploader allows you to create users, set upload credit limits, and user 
+What is Uploader?
+Uploader is a simple web application that allows users to upload files to a web server
+and has support for user authentication. There is support for upload credits and user
 expiration dates.
 
-There is an Administration control panel to manage the users.
+Uploader was created because I needed a simple platform to allow users to upload files
+to my web server.
+
+Features:
+ -Set User Expiration Date - per user
+ -Set upload credits - per user
+ -Manage Users Files
+ -Users can change their own passwords
+ -Add users easily
 
 Installation:
-    -Configure webserver correctly to use script
+    -Configure the webserver correctly to use webpy script
+    ***Lighttpd Example***
+    
+    fastcgi.server = ( 
+        "/uploader.py" =>
+        ((
+            "socket" => "/tmp/fastcgi-uploader.tmp",
+            "bin-path" => "/home/http/uploader/index.py",
+            "max-proc" => 1,
+            "bin-environment" => (
+                "REAL_SCRIPT_NAME" => "/uploader"
+            ),
+            "check-local" => "disable"
+        ))
+        )   
+    
+    url.rewrite-once = (
+        "^/uploader/(.*)$" => "/uploader.py/$1"
+    )
+            
+
     -Create Sqlite Database:
         create table sessions (
             session_id char(128) UNIQUE NOT NULL,
@@ -16,14 +45,29 @@ Installation:
         );
         create table users (
             id INTEGER PRIMARY KEY,
-            name VARCHAR(20),
-            password VARCHAR(20),
+            name VARCHAR(20) NOT NULL,
+            password VARCHAR(20) NOT NULL,
             credits INTEGER,
             exprdate DATETIME,
-            usertype BOOLEAN 
+            usertype CHAR(5) NOT NULL
         );
 
-        or copy the example.db (username: admin, password: admin)
+        # Username: admin, Password: admin, Usertype: admin
+        insert INTO 'users' (name, password, usertype) values ('admin', 'tdlasp2ru0PJ6', 'admin');
+
+        To generate the password hash: python -c "import crypt; print crypt.crypt('yourPassword', 'td')"
+
+        Alternatively copy the example.db (username: admin, password: admin)
+
+    -Configure some simple variables in index.py
+        uploadpath = physical path where all uploads will be stored - ex: /srv/http/example.com/uploads/
+        uploadurl = the url to access all uploaded files - ex: http://example.com/uploads/
+
+        MaxSize = Maximum Size of uploaded files for users
+        MaxSizeAdmin = Maximum Size of uploaded files from Administrators 
+
+Troubleshooting:
+    *If you get an error about the database being unable to be read/opened check the permissions and make sure the web server can read/write the database.
 
 File bugs, feature requests, or anything else on the github page.
 
