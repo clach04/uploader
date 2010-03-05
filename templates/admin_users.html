@@ -23,14 +23,9 @@ $code:
     #content {
         padding: 10px 20px 0;
     }
-    h2 {
+    h3 {
         font-size: 1.3em;
         color: #2B547E;
-    }
-    #admin {
-        padding: 5px;
-        border-top: 1px solid #000;
-        border-bottom: 0;
     }
     table {
         border: 1px solid #000;
@@ -50,9 +45,10 @@ $code:
 $:render.head()
     <div id="content">
         <h1>Users</h1>
-        <strong class="Wrong" style="color: red;">$msg</strong>
+        $if msg:
+            <h2 class="Wrong" style="color: red;">$msg</h2>
         <form method="post" action="">
-            <h2>Active Users</h2>
+            <h3>Active Users</h3>
             <table>
                 <tr>
                     <th>Username</th>
@@ -78,7 +74,7 @@ $:render.head()
                     </tr>
             </table>
             <br/>
-            <h2>Invalid Users</h2>
+            <h3>Invalid Users</h3>
             <table>
                 <tr>
                     <th>Username</th>

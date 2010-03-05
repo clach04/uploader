@@ -29,7 +29,8 @@ $def with (form)
 $:render.head()
     <div id="content">
         <h1>Add User</h1>
-        <strong class="wrong" style="font-size: 1.2em;">$form.note</strong>
+        $if form.note:
+            <h2 class="wrong" style="font-size: 1.2em;">$form.note</h2>
         <form method="post" action="">
             <table>
                 <tr>
