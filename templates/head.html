@@ -1,4 +1,9 @@
 $def with ()
+
+$code:
+    y,m,d=session.exprdate.split(' ')[0].split('-')
+    exp=m+'/'+d+'/'+y
+
 <div id="head">
     <span style="position: absolute; right: 5px;">
         <a href="$ctx.home/password">Change Password</a>&nbsp;&nbsp;-&nbsp;
@@ -10,5 +15,5 @@ $def with ()
         <span><a href="$ctx.home/upload">Upload</a></span>
     $else:
         <span><b>Credits:</b> $session.credits </span>&nbsp;-&nbsp;
-        <span><b>Experation Date:</b> $session.exprdate.split(' ')[0]</span>
+        <span><b>Experation Date:</b> $exp</span>
 </div>
