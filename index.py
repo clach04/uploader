@@ -6,6 +6,9 @@
 import os
 import sys
 import cgi
+import random
+import string
+import getpass
 from datetime import datetime
 import itertools
 import sqlite3
@@ -46,6 +49,38 @@ web.config.session_parameters['ignore_expiry'] = False  #Defaults sets to true
 web.config.session_parameters['expired_message'] = 'Session Expired... Please reload the page and login in again.' #Error message when session expires
 
 #Initalizes and stores session information in sqlite database
+# sqlite3 specific code
+db = sqlite3.connect(database_name)
+# TODO DDL only if empty..
+c = db.cursor()
+try:
+    c.execute("""
+            create table sessions (
+                session_id char(128) UNIQUE NOT NULL,
+                atime timestamp NOT NULL default current_timestamp,
+                data text
+            )
+    """)
+except sqlite3.OperationalError:
+    # Assume table already exists
+    pass
+try:
+    c.execute("""
+            create table users (
+                id INTEGER PRIMARY KEY,
+                name VARCHAR(20) NOT NULL,
+                password VARCHAR(20) NOT NULL,
+                credits INTEGER,
+                exprdate DATETIME,
+                usertype CHAR(5) NOT NULL
+            )
+    """)
+except sqlite3.OperationalError:
+    # Assume table already exists
+    pass
+c.close()
+db.commit()
+db.close()
 db = web.database(dbn="sqlite", db=database_name)
 store = web.session.DBStore(db, 'sessions')
 session = web.session.Session(app, store, initializer={'login': 0,'userType':'anonymous'})
@@ -135,14 +170,19 @@ def checkChangePasswd(i):
     password=i.password
     return checkpassword(username,password)
 
+def getsalt(chars = string.letters + string.digits):
+    # generate a random 2-character 'salt'
+    return random.choice(chars) + random.choice(chars)
+
 def checkpassword(username,password):
-    typed_password = crypt.crypt(password, 'td') #Encrypted Typed Password
     user=list(db.select('users', dict(name=username), where="name = $name"))
     if len(user) == 1:
         user=user[0]
     else:
         raise DBEntry('Too Many!')
     db_password=user.get('password') #Encrypted Password in Database
+    temp_salt = db_password[:2]
+    typed_password = crypt.crypt(password, temp_salt) #Encrypted Typed Password
     return typed_password == db_password
 
 # Database lookups + writes
@@ -400,7 +440,7 @@ class adduser:
         if f.validates():
             # If the form validates store variables locally and insert them into the database 
             username = f.d.username.lower()
-            password = crypt.crypt(f.d.password, 'td')
+            password = crypt.crypt(f.d.password, getsalt())
             credits = f.d.credits
             date = datetime(int(f.d.year), int(f.d.month), int(f.d.day))
             userType=f.d.uType
@@ -482,7 +522,7 @@ class edituser:
             
             #Change Password if one was entered
             if password:
-                newPass = crypt.crypt(password, 'td') #Encrypted Typed Password
+                newPass = crypt.crypt(password, getsalt()) #Encrypted Typed Password
                 db.update('users', where="id=$id", password=newPass, vars=dict(id=id) )
         else:
             #Fill in the form with the values that were submitted
@@ -558,7 +598,7 @@ class password:
         f = changePass_form()
         if f.validates():
             username = session.username
-            password = crypt.crypt(f.d.newPass1, 'td') #Encrypted Typed Password
+            password = crypt.crypt(f.d.newPass1, getsalt()) #Encrypted Typed Password
             db.update('users', where="name=$username", password=password, vars=dict(username=username))
         else:
             return render.password(f,'')
@@ -615,7 +655,21 @@ def main(argv=None):
     if argv is None:
         argv = sys.argv
     
-    app.run()
+    if 'resetadmin' in argv:
+        db.delete('users', where="name='admin'")
+        new_passwd = getpass.getpass('Enter new admin password: ')
+        # delete users (if present?)
+        # DDL? See earlier in script
+        print dir(db)
+        print new_passwd
+        new_passwd = crypt.crypt(new_passwd, getsalt())
+        print new_passwd
+        username = 'admin'
+        user_type = 'admin'
+        print (None, username, new_passwd, None, None, user_type)
+        db.insert('users', name=username, password=new_passwd, usertype=user_type)
+    else:
+        app.run()
     
     return 0
 

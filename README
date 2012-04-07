@@ -46,31 +46,9 @@ Installation:
     )
             
 
-    -Create Sqlite Database:
-        create table sessions (
-            session_id char(128) UNIQUE NOT NULL,
-            atime timestamp NOT NULL default current_timestamp,
-            data text
-        );
-        create table users (
-            id INTEGER PRIMARY KEY,
-            name VARCHAR(20) NOT NULL,
-            password VARCHAR(20) NOT NULL,
-            credits INTEGER,
-            exprdate DATETIME,
-            usertype CHAR(5) NOT NULL
-        );
-
-        # Username: admin, Password: admin, Usertype: admin
-        insert INTO 'users' (name, password, usertype) values ('admin', 'tdlasp2ru0PJ6', 'admin');
-
-        To generate the password hash: python -c "import crypt; print crypt.crypt('yourPassword', 'td')"
-        # NOTE using 'td' as salt is an example do NOT use the same salt in production, this should be random.
-
-        Alternatively use the example.db (username: admin, password: admin)
-
-        Rename the database to app.db
-
+    - Run `python index.py resetadmin` this will create the app.db database
+    and prompt for the admin password.
+    
     -Configure some simple variables in index.py
         uploadpath = physical path where all uploads will be stored - ex: /srv/http/example.com/uploads/
         uploadurl = the url to access all uploaded files - ex: http://example.com/uploads/
