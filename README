@@ -47,7 +47,20 @@ Installation:
     url.rewrite-once = (
         "^/uploader/(.*)$" => "/uploader.py/$1"
     )
-            
+    
+    Depending on server may want to create a .htaccess file to protect database/config file and auto defaulting to application URL:
+    
+        # Set the default handler.
+        DirectoryIndex index.fcgi/
+
+        # deny access to user database
+        <FilesMatch "app.db|uploader.ini">
+          Order deny,allow
+          Deny from all
+        </FilesMatch>
+    
+    NOTE web.py web/wsgi.py also need to be edited to NOT pass any params other than function into flups.WSGIServer() for runfcgi also  updated application.py to call runfcgi()
+
 
     - Run `python index.py resetadmin` this will create the app.db database
     and prompt for the admin password.
