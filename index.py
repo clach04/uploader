@@ -10,6 +10,7 @@ import random
 import string
 import getpass
 from datetime import datetime
+import ConfigParser
 import itertools
 import sqlite3
 
@@ -21,9 +22,20 @@ import crypt  # FIXME consider replacing with http://pypi.python.org/pypi/crypta
 web.config.debug = False
 
 # Configuration Settings
-uploadpath = '/home/http/pyther.net/uploads' #Physical Path to file uploads on file system
-uploadurl = 'http://pyther.net/uploads'   #Web Address to said uploads
-database_name = "app.db"
+config_filename = 'uploader.ini'
+config = ConfigParser.ConfigParser()
+config.read(config_filename)
+config_dict = {}
+try:
+    for key in config.options('config'):
+        config_dict[key] = config.get('config', key)
+except ConfigParser.NoSectionError:
+    pass
+
+
+uploadpath = config_dict.get('uploadpath') or '/home/http/pyther.net/uploads' #Physical Path to file uploads on file system
+uploadurl = config_dict.get('uploadurl') or 'http://pyther.net/uploads'   #Web Address to said uploads
+database_name = config_dict.get('database_name') or "app.db"
 
 #Values must be in bytes
 MaxSize=(20 * 1024 * 1024) # 20MB
