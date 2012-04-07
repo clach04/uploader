@@ -22,7 +22,7 @@ import crypt  # FIXME consider replacing with http://pypi.python.org/pypi/crypta
 web.config.debug = False
 
 # Configuration Settings
-config_filename = 'uploader.ini'
+config_filename = 'uploader.ini'  # TODO may need full pathname
 config = ConfigParser.ConfigParser()
 config.read(config_filename)
 config_dict = {}
@@ -38,6 +38,7 @@ uploadurl = config_dict.get('uploadurl') or 'http://pyther.net/uploads'   #Web A
 database_name = config_dict.get('database_name') or "app.db"
 
 #Values must be in bytes
+# FIXME TODO pick up from config file or database
 MaxSize=(20 * 1024 * 1024) # 20MB
 MaxSizeAdmin=0 #0 for Administrators
 
