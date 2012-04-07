@@ -26,6 +26,9 @@ Installation:
        Not Recommend for daily usage
 
     -Configure the webserver correctly to use webpy script
+    Move script to web server:
+        tar -zcvf myuploader.tgz index.py static/ templates/ web/
+
     ***Lighttpd Example***
     
     fastcgi.server = ( 
