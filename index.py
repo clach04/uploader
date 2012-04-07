@@ -1,13 +1,18 @@
 #!/usr/bin/env python
+# -*- coding: us-ascii -*-
+# vim:ts=4:sw=4:softtabstop=4:smarttab:expandtab
+#
 
-import web
-from web import form
-import sqlite3
-import crypt
 import os
+import sys
 import cgi
 from datetime import datetime
 import itertools
+import sqlite3
+
+import web
+from web import form
+import crypt
 
 #Must be disabled, otherwise sessions break!!!
 web.config.debug = False
@@ -15,6 +20,7 @@ web.config.debug = False
 # Configuration Settings
 uploadpath = '/home/http/pyther.net/uploads' #Physical Path to file uploads on file system
 uploadurl = 'http://pyther.net/uploads'   #Web Address to said uploads
+database_name = "app.db"
 
 #Values must be in bytes
 MaxSize=(20 * 1024 * 1024) # 20MB
@@ -40,7 +46,7 @@ web.config.session_parameters['ignore_expiry'] = False  #Defaults sets to true
 web.config.session_parameters['expired_message'] = 'Session Expired... Please reload the page and login in again.' #Error message when session expires
 
 #Initalizes and stores session information in sqlite database
-db = web.database(dbn="sqlite", db="app.db")
+db = web.database(dbn="sqlite", db=database_name)
 store = web.session.DBStore(db, 'sessions')
 session = web.session.Session(app, store, initializer={'login': 0,'userType':'anonymous'})
 
@@ -603,6 +609,16 @@ class upload:
             url=uploadurl+'/'+session.username+"/"+filename
 
         return render.upResult(filename, url)
-        
-if __name__ == "__main__": app.run()
 
+
+def main(argv=None):
+    if argv is None:
+        argv = sys.argv
+    
+    app.run()
+    
+    return 0
+
+
+if __name__ == "__main__":
+    sys.exit(main())
