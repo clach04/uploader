@@ -15,7 +15,7 @@ import sqlite3
 
 import web
 from web import form
-import crypt
+import crypt  # FIXME consider replacing with http://pypi.python.org/pypi/cryptacular/ which is portable and more secure in the off change the hashes are exposed
 
 #Must be disabled, otherwise sessions break!!!
 web.config.debug = False
@@ -656,17 +656,13 @@ def main(argv=None):
         argv = sys.argv
     
     if 'resetadmin' in argv:
+        # DDL? See earlier in script
+        # add option delete (all) users?
         db.delete('users', where="name='admin'")
         new_passwd = getpass.getpass('Enter new admin password: ')
-        # delete users (if present?)
-        # DDL? See earlier in script
-        print dir(db)
-        print new_passwd
         new_passwd = crypt.crypt(new_passwd, getsalt())
-        print new_passwd
         username = 'admin'
         user_type = 'admin'
-        print (None, username, new_passwd, None, None, user_type)
         db.insert('users', name=username, password=new_passwd, usertype=user_type)
     else:
         app.run()
